@@ -1,0 +1,48 @@
+import requests
+import json
+
+BASE_URL = "http://127.0.0.1:8000"
+sizes = [5, 10, 15]
+
+for n in sizes:
+   
+    print(f" PRUEBAS CON GRAFO DE {n} NODOS ")
+  
+    
+    # 1. Generar el grafo sintético
+    gen_res = requests.post(f"{BASE_URL}/api/graph/generate", json={"num_nodes": n, "weighted": True})
+    if gen_res.status_code != 200:
+        print(f"Error generando grafo de {n} nodos:", gen_res.text)
+        continue
+        
+    graph_data = gen_res.json()
+    graph = graph_data["graph"]
+    
+    # Definir nodos de inicio y fin (por ejemplo, 0 y n-1)
+    start_node = 0
+    end_node = n - 1
+    
+    # 2. Probar Dijkstra (P)
+    dijkstra_res = requests.post(f"{BASE_URL}/api/algorithm/dijkstra", json={
+        "graph": graph,
+        "start_node": start_node,
+        "end_node": end_node
+    }).json()
+    print("\n[Dijkstra - P]")
+    print(json.dumps(dijkstra_res["result"], indent=2))
+    
+    # 3. Probar TSP Voraz 
+    tsp_greedy_res = requests.post(f"{BASE_URL}/api/algorithm/tsp-greedy", json={
+        "graph": graph,
+        "start_node": start_node
+    }).json()
+    print("\n[TSP Voraz - P]")
+    print(json.dumps(tsp_greedy_res["result"], indent=2))
+    
+    # 4. Probar TSP Exacto (NP) - Nota: Para 15 nodos 
+    print(f"\n[TSP Exacto - NP] Ejecutando para {n} nodos (esto puede tardar unos segundos si n=15)...")
+    tsp_exact_res = requests.post(f"{BASE_URL}/api/algorithm/tsp-exact", json={
+        "graph": graph,
+        "start_node": start_node
+    }).json()
+    print(json.dumps(tsp_exact_res["result"], indent=2))
